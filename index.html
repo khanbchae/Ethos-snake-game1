@@ -1,3 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>ETHOS VISION SNAKE GAME</title>
+<style>
+/* Your existing styles unchanged */
+:root {
+--primary: #5c63e0;
+--accent: #8e56ff;
+--bg-dark: #0d0f24;
+--glow-color: #8e56ff;
+--eth-size: 36px;
+}
+* {
+box-sizing: border-box;
+}
+body {
+margin: 0;
+min-height: 100vh;
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+color: #f0f0f5;
+background: radial-gradient(circle at 30% 40%, rgba(92,99,224,0.15) 0%, var(--bg-dark) 75%) fixed;
+overflow-x: hidden;
+position: relative;
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 24px 16px;
+}
+
+/* ... rest of your CSS unchanged ... */
+@keyframes bgShift {
+0% { background-position: 0% 50%; }
+50% { background-position: 100% 50%; }
+100% { background-position: 0% 50%; }
+}
+
+body::before {
+content: "";
+position: fixed;
+inset: 0;
+background: linear-gradient(270deg, #5c63e0, #8e56ff, #5c63e0);
+background-size: 600% 600%;
+animation: bgShift 40s ease infinite;
+filter: blur(120px);
+z-index: -3;
+}
+
+/* rest of CSS untouched... */
+.side-eth {
+position: fixed;
+top: 50%;
+transform: translateY(-50%);
+display: flex;
+flex-direction: column;
+gap: 16px;
+z-index: 10;
+user-select: none;
+pointer-events: none;
+animation: floatFade 5s ease-in-out infinite alternate;
+}
+
+@keyframes floatFade {
+0% { opacity: 0.9; transform: translateY(-4px) translateX(0); }
+50% { opacity: 0.7; transform: translateY(4px) translateX(2px); }
+100% { opacity: 0.9; transform: translateY(-4px) translateX(0); }
+}
+
+.side-eth.left {
+left: 12px;
+}
+.side-eth.right {
+right: 12px;
+}
+.side-eth img {
+width: var(--eth-size);
+height: var(--eth-size);
+border-radius: 10px;
+filter: drop-shadow(0 0 8px var(--glow-color));
+opacity: 0.85;
+transition: opacity 0.3s ease;
+}
+
+/* Title styling */
+h1 {
+margin: 0 0 16px;
+font-size: 3rem;
+font-weight: 900;
+letter-spacing: 1.2px;
+text-align: center;
+color: #fff;
+text-shadow:
+0 0 10px var(--primary),
+0 0 20px var(--primary),
+0 0 30px var(--accent),
+0 0 40px var(--accent),
+0 0 70px var(--accent);
+animation: neonPulse 3s ease-in-out infinite alternate;
+}
+
+@keyframes neonPulse {
+0%, 100% {
+text-shadow:
+0 0 10px var(--primary),
+0 0 20px var(--primary),
+0 0 30px var(--accent),
+0 0 40px var(--accent),
+0 0 70px var(--accent);
+}
+50% {
+text-shadow:
+0 0 20px var(--primary),
+0 0 40px var(--primary),
+0 0 60px var(--accent),
+0 0 80px var(--accent),
+0 0 100px var(--accent);
+}
+}
+
+/* Canvas styling */
+canvas {
+background: rgba(20, 24, 50, 0.9);
+border: 4px solid var(--primary);
+border-radius: 18px;
+box-shadow:
+0 0 50px 10px var(--accent),
+inset 0 0 30px var(--primary);
+image-rendering: pixelated;
+width: 640px;
+height: 640px;
+}
+
+/* Score container */
+.score-container {
+display: flex;
+gap: 20px;
+align-items: center;
+flex-wrap: wrap;
+margin-top: 20px;
+width: 100%;
+max-width: 700px;
+justify-content: center;
+}
+
+/* Score boxes */
+.score-box {
+position: relative;
+padding: 14px 22px;
+border-radius: 14px;
+background: linear-gradient(135deg, var(--primary), var(--accent));
+color: white;
+font-weight: 700;
+min-width: 140px;
+text-align: center;
+filter: drop-shadow(0 15px 35px var(--accent));
+transition: transform 0.3s ease;
+animation: pulseGlow 3s ease-in-out infinite alternate;
+}
+
+.score-box.small {
+min-width: 100px;
+padding: 8px 16px;
+font-size: 0.9rem;
+}
+
+.score-box .label {
+font-size: 0.6rem;
+letter-spacing: 1.3px;
+text-transform: uppercase;
+opacity: 0.9;
+margin-bottom: 4px;
+}
+
+.score-box .value {
+font-size: 2.2rem;
+line-height: 1;
+letter-spacing: 1px;
+text-shadow: 0 0 8px rgba(255 255 255 / 0.7);
+}
+
+@keyframes pulseGlow {
+0%, 100% {
+filter: drop-shadow(0 15px 35px var(--accent));
+}
+50% {
+filter: drop-shadow(0 20px 45px var(--primary));
+}
+}
+
+.score-bounce {
+animation: pop 0.4s ease-out;
+}
+@keyframes pop {
+0% { transform: scale(1); }
+30% { transform: scale(1.3); }
+60% { transform: scale(0.95); }
+100% { transform: scale(1); }
+}
+
+/* Button styling */
+button {
+background: var(--primary);
+border: none;
+padding: 12px 26px;
+border-radius: 14px;
+color: white;
+cursor: pointer;
+font-weight: 700;
+font-size: 1rem;
+box-shadow:
+0 0 30px var(--accent),
+0 0 50px var(--primary);
+transition: filter 0.3s, transform 0.25s, box-shadow 0.3s;
+user-select: none;
+}
+button:hover, button:focus {
+filter: brightness(1.15);
+transform: translateY(-2px);
+box-shadow:
+0 0 40px var(--accent),
+0 0 70px var(--primary);
+}
+
+/* Particle styling */
+.particle {
+position: absolute;
+width: 7px;
+height: 7px;
+border-radius: 50%;
+background: rgba(255, 255, 255, 0.85);
+pointer-events: none;
+filter: blur(3px);
+mix-blend-mode: screen;
+will-change: transform, opacity;
+}
+
+/* Apple glow pulse */
+@keyframes applePulse {
+0%, 100% {
+box-shadow: 0 0 8px 2px #ff4f4f;
+}
+50% {
+box-shadow: 0 0 18px 6px #ff4f4f;
+}
+}
+
+/* Apple glow circle (drawn in canvas) will pulse with this */
+.apple-glow {
+animation: applePulse 2.5s ease-in-out infinite;
+}
+</style>
+</head>
+<body>
+
+<h1>ETHOS VISION SNAKE GAME</h1>
+
+<!-- Side ETH logos -->
+<div class="side-eth left" aria-hidden="true">
+<img src="pAFgpio-_400x400.jpg" alt="ETH logo" />
+<img src="pAFgpio-_400x400.jpg" alt="ETH logo" />
+<img src="pAFgpio-_400x400.jpg" alt="ETH logo" />
+<img src="pAFgpio-_400x400.jpg" alt="ETH logo" />
+<img src="pAFgpio-_400x400.jpg" alt="ETH logo" />
+</div>
+
+<div class="side-eth right" aria-hidden="true">
+<img src="pAFgpio-_400x400.jpg" alt="ETH logo" />
+<img src="pAFgpio-_400x400.jpg" alt="ETH logo" />
+<img src="pAFgpio-_400x400.jpg" alt="ETH logo" />
+<img src="pAFgpio-_400x400.jpg" alt="ETH logo" />
+<img src="pAFgpio-_400x400.jpg" alt="ETH logo" />
+</div>
+
+<canvas id="game" width="640" height="640"></canvas>
+<div class="score-container">
+<div id="current-score" class="score-box" aria-live="polite">
+<div class="label">SCORE</div>
+<div id="score-value" class="value">0</div>
+</div>
+<div id="high-score" class="score-box small" aria-live="polite">
+<div class="label">BEST</div>
+<div id="high-score-value" class="value">0</div>
+</div>
+<button id="restart" aria-label="Restart Game">Restart</button>
+<div style="margin-left:auto; font-size:0.85rem; opacity:0.8;">Arrow keys / R to reset</div>
+</div>
+
+<script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const CELL = 40;
@@ -9,273 +298,4 @@ const ethImg = new Image();
 ethImg.src = "pAFgpio-_400x400.jpg";
 
 let snake;
-let apple;
-let bonusApple = null;           // <-- new bonus apple variable
-let normalApplesEaten = 0;       // <-- count normal apples eaten
-let dir;
-let nextDir;
-let score = 0;
-let best = parseInt(localStorage.getItem("ethSnakeBest") || "0", 10);
-let lastTime = 0;
-let gameOver = false;
-
-const BONUS_BONUS_POINTS = 3;    // Bonus apple points
-
-const scoreValueEl = document.getElementById("score-value");
-const highScoreValueEl = document.getElementById("high-score-value");
-highScoreValueEl.textContent = best;
-
-const eatSound = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
-
-function reset() {
-  snake = [
-    { x: Math.floor(COLS/2), y: Math.floor(ROWS/2) },
-    { x: Math.floor(COLS/2)-1, y: Math.floor(ROWS/2) },
-  ];
-  dir = { x: 1, y: 0 };
-  nextDir = { ...dir };
-  placeApple();
-  bonusApple = null;
-  normalApplesEaten = 0;
-  score = 0;
-  scoreValueEl.textContent = score;
-  speed = 5;
-  lastTime = performance.now();
-  gameOver = false;
-  window.requestAnimationFrame(gameLoop);
-}
-
-function placeApple() {
-  let valid;
-  do {
-    apple = {
-      x: Math.floor(Math.random() * COLS),
-      y: Math.floor(Math.random() * ROWS)
-    };
-    // Ensure apple is not on snake or bonus apple
-    valid = !snake.some(s => s.x === apple.x && s.y === apple.y)
-            && (!bonusApple || (apple.x !== bonusApple.x || apple.y !== bonusApple.y));
-  } while (!valid);
-}
-
-function placeBonusApple() {
-  let valid;
-  do {
-    bonusApple = {
-      x: Math.floor(Math.random() * COLS),
-      y: Math.floor(Math.random() * ROWS)
-    };
-    valid = !snake.some(s => s.x === bonusApple.x && s.y === bonusApple.y)
-            && (apple.x !== bonusApple.x || apple.y !== bonusApple.y);
-  } while (!valid);
-}
-
-function update() {
-  dir = nextDir;
-  const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
-
-  if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) {
-    endGame();
-    return;
-  }
-  if (snake.some(s => s.x === head.x && s.y === head.y)) {
-    endGame();
-    return;
-  }
-
-  snake.unshift(head);
-
-  if (head.x === apple.x && head.y === apple.y) {
-    // Ate normal apple
-    score++;
-    normalApplesEaten++;
-    eatSound.play().catch(() => {});
-    updateScoreDisplay(score);
-    if (speed < 15) speed += 0.3;
-
-    // After 6 normal apples eaten, spawn bonus apple if none exists
-    if (normalApplesEaten === 6 && bonusApple === null) {
-      placeBonusApple();
-    } else {
-      placeApple();
-    }
-  }
-  else if (bonusApple && head.x === bonusApple.x && head.y === bonusApple.y) {
-    // Ate bonus apple
-    score += BONUS_BONUS_POINTS;
-    eatSound.play().catch(() => {});
-    updateScoreDisplay(score);
-    bonusApple = null;
-    normalApplesEaten = 0;
-    placeApple();
-  }
-  else {
-    snake.pop();
-  }
-}
-
-function endGame() {
-  gameOver = true;
-  setTimeout(() => {
-    alert("Game Over! Score: " + score);
-  }, 50);
-}
-
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Background fill
-  ctx.fillStyle = "rgba(20,24,50,0.9)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  // Normal apple glow & apple
-  const ax = apple.x * CELL + CELL/2;
-  const ay = apple.y * CELL + CELL/2;
-
-  const gradient = ctx.createRadialGradient(ax, ay, CELL*0.15, ax, ay, CELL*1.3);
-  gradient.addColorStop(0, "rgba(255,79,79,0.9)");
-  gradient.addColorStop(0.4, "rgba(255,79,79,0.3)");
-  gradient.addColorStop(1, "rgba(255,79,79,0)");
-  ctx.fillStyle = gradient;
-  ctx.beginPath();
-  ctx.arc(ax, ay, CELL * 1.3, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#ff4f4f";
-  ctx.fillRect(apple.x * CELL + 8, apple.y * CELL + 8, CELL - 16, CELL - 16);
-  ctx.strokeStyle = "#fff5f5";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(apple.x * CELL + 8, apple.y * CELL + 8, CELL - 16, CELL - 16);
-
-  // Bonus apple (if present)
-  if (bonusApple) {
-    const bx = bonusApple.x * CELL + CELL/2;
-    const by = bonusApple.y * CELL + CELL/2;
-
-    // Blue glow radial gradient
-    const bonusGradient = ctx.createRadialGradient(bx, by, CELL*0.15, bx, by, CELL*1.3);
-    bonusGradient.addColorStop(0, "rgba(92, 99, 224, 0.9)");
-    bonusGradient.addColorStop(0.4, "rgba(92, 99, 224, 0.3)");
-    bonusGradient.addColorStop(1, "rgba(92, 99, 224, 0)");
-    ctx.fillStyle = bonusGradient;
-    ctx.beginPath();
-    ctx.arc(bx, by, CELL * 1.3, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Draw Ethereum logo with blue tint
-    ctx.save();
-    ctx.globalAlpha = 0.85;
-    ctx.filter = "hue-rotate(200deg) saturate(150%) brightness(110%)";
-    ctx.drawImage(ethImg, bonusApple.x * CELL + 8, bonusApple.y * CELL + 8, CELL - 16, CELL - 16);
-    ctx.restore();
-
-    ctx.strokeStyle = "#ffffffcc";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(bonusApple.x * CELL + 8, bonusApple.y * CELL + 8, CELL - 16, CELL - 16);
-  }
-
-  // Draw snake
-  snake.forEach((seg, i) => {
-    const px = seg.x * CELL;
-    const py = seg.y * CELL;
-
-    if (i === 0) {
-      ctx.save();
-      ctx.shadowColor = "rgba(142,86,255,0.7)";
-      ctx.shadowBlur = 16;
-      ctx.drawImage(ethImg, px, py, CELL, CELL);
-      ctx.restore();
-      ctx.drawImage(ethImg, px, py, CELL, CELL);
-    } else {
-      ctx.drawImage(ethImg, px, py, CELL, CELL);
-    }
-  });
-}
-
-function updateScoreDisplay(newScore) {
-  scoreValueEl.textContent = newScore;
-  scoreValueEl.parentElement.classList.add("score-bounce");
-  setTimeout(() => scoreValueEl.parentElement.classList.remove("score-bounce"), 400);
-  spawnParticles();
-  if (newScore > best) {
-    best = newScore;
-    localStorage.setItem("ethSnakeBest", best);
-    highScoreValueEl.textContent = best;
-    highScoreValueEl.parentElement.classList.add("score-bounce");
-    setTimeout(() => highScoreValueEl.parentElement.classList.remove("score-bounce"), 400);
-  }
-}
-
-const particles = [];
-function spawnParticles() {
-  for (let i=0; i<12; i++) {
-    particles.push({
-      x: apple.x * CELL + CELL/2,
-      y: apple.y * CELL + CELL/2,
-      vx: (Math.random() - 0.5) * 6,
-      vy: (Math.random() - 0.5) * 6,
-      life: 30 + Math.random() * 30,
-      size: 3 + Math.random() * 4,
-      opacity: 1,
-    });
-  }
-}
-function updateParticles() {
-  for (let i = particles.length -1; i>=0; i--) {
-    const p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.life--;
-    p.opacity = p.life / 60;
-    if (p.life <= 0) particles.splice(i, 1);
-  }
-}
-function drawParticles() {
-  particles.forEach(p => {
-    ctx.beginPath();
-    ctx.fillStyle = `rgba(255,79,79,${p.opacity})`;
-    ctx.shadowColor = "rgba(255,79,79,0.8)";
-    ctx.shadowBlur = 8;
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-    ctx.fill();
-  });
-}
-
-function gameLoop(timestamp) {
-  const delta = (timestamp - lastTime) / 1000;
-  if (delta >= 1 / speed) {
-    update();
-    lastTime = timestamp;
-  }
-  draw();
-  updateParticles();
-  drawParticles();
-  if (!gameOver) window.requestAnimationFrame(gameLoop);
-}
-
-window.addEventListener("keydown", (e) => {
-  switch(e.key) {
-    case "ArrowUp":
-      if (dir.y !== 1) nextDir = {x:0, y:-1};
-      break;
-    case "ArrowDown":
-      if (dir.y !== -1) nextDir = {x:0, y:1};
-      break;
-    case "ArrowLeft":
-      if (dir.x !== 1) nextDir = {x:-1, y:0};
-      break;
-    case "ArrowRight":
-      if (dir.x !== -1) nextDir = {x:1, y:0};
-      break;
-    case "r":
-    case "R":
-      reset();
-      break;
-  }
-});
-
-document.getElementById("restart").addEventListener("click", reset);
-
-ethImg.onload = () => {
-  reset();
-};
+let snakePixels; // for smooth movement
