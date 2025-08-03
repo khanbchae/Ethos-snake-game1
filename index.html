@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <title>ETHOS VISION SNAKE GAME</title>
 <style>
-/* Your existing styles unchanged */
 :root {
 --primary: #5c63e0;
 --accent: #8e56ff;
@@ -29,7 +28,7 @@ align-items: center;
 padding: 24px 16px;
 }
 
-/* ... rest of your CSS unchanged ... */
+/* Animated background gradient */
 @keyframes bgShift {
 0% { background-position: 0% 50%; }
 50% { background-position: 100% 50%; }
@@ -47,7 +46,7 @@ filter: blur(120px);
 z-index: -3;
 }
 
-/* rest of CSS untouched... */
+/* ETH logos columns */
 .side-eth {
 position: fixed;
 top: 50%;
@@ -298,4 +297,226 @@ const ethImg = new Image();
 ethImg.src = "pAFgpio-_400x400.jpg";
 
 let snake;
-let snakePixels; // for smooth movement
+let apple;
+let dir;
+let nextDir;
+let score = 0;
+let best = parseInt(localStorage.getItem("ethSnakeBest") || "0", 10);
+let lastTime = 0;
+let gameOver = false;
+
+// Score UI elements
+const scoreValueEl = document.getElementById("score-value");
+const highScoreValueEl = document.getElementById("high-score-value");
+highScoreValueEl.textContent = best;
+
+// Sound effect when eating apple
+const eatSound = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+
+function reset() {
+snake = [
+{ x: Math.floor(COLS/2), y: Math.floor(ROWS/2) },
+{ x: Math.floor(COLS/2)-1, y: Math.floor(ROWS/2) },
+];
+dir = { x: 1, y: 0 };
+nextDir = { ...dir };
+placeApple();
+score = 0;
+scoreValueEl.textContent = score;
+speed = 5;
+lastTime = performance.now();
+gameOver = false;
+window.requestAnimationFrame(gameLoop);
+}
+
+function placeApple() {
+let valid;
+do {
+apple = {
+x: Math.floor(Math.random() * COLS),
+y: Math.floor(Math.random() * ROWS)
+};
+valid = !snake.some(s => s.x === apple.x && s.y === apple.y);
+} while (!valid);
+}
+
+function gameLoop(timestamp) {
+const delta = (timestamp - lastTime) / 1000;
+if (delta >= 1 / speed) {
+update();
+lastTime = timestamp;
+}
+draw();
+if (!gameOver) window.requestAnimationFrame(gameLoop);
+}
+
+function update() {
+dir = nextDir;
+const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+
+if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) {
+endGame(); return;
+}
+if (snake.some(s => s.x === head.x && s.y === head.y)) {
+endGame(); return;
+}
+
+snake.unshift(head);
+if (head.x === apple.x && head.y === apple.y) {
+score++;
+eatSound.play().catch(() => {}); // Play eating sound
+updateScoreDisplay(score);
+if (speed < 15) speed += 0.3;
+placeApple();
+} else {
+snake.pop();
+}
+}
+
+function endGame() {
+gameOver = true;
+setTimeout(() => {
+alert("Game Over! Score: " + score);
+}, 50);
+}
+
+function draw() {
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+// Background fill
+ctx.fillStyle = "rgba(20,24,50,0.9)";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+// Apple glow
+const ax = apple.x * CELL + CELL/2;
+const ay = apple.y * CELL + CELL/2;
+
+const gradient = ctx.createRadialGradient(ax, ay, CELL*0.15, ax, ay, CELL*1.3);
+gradient.addColorStop(0, "rgba(255,79,79,0.9)");
+gradient.addColorStop(0.4, "rgba(255,79,79,0.3)");
+gradient.addColorStop(1, "rgba(255,79,79,0)");
+ctx.fillStyle = gradient;
+ctx.beginPath();
+ctx.arc(ax, ay, CELL * 1.3, 0, Math.PI * 2);
+ctx.fill();
+
+// Draw apple
+ctx.fillStyle = "#ff4f4f";
+ctx.fillRect(apple.x * CELL + 8, apple.y * CELL + 8, CELL - 16, CELL - 16);
+ctx.strokeStyle = "#fff5f5";
+ctx.lineWidth = 2;
+ctx.strokeRect(apple.x * CELL + 8, apple.y * CELL + 8, CELL - 16, CELL - 16);
+
+// Draw snake
+snake.forEach((seg, i) => {
+const px = seg.x * CELL;
+const py = seg.y * CELL;
+
+if (i === 0) {
+// Head with glow
+ctx.save();
+ctx.shadowColor = "rgba(142,86,255,0.7)";
+ctx.shadowBlur = 16;
+ctx.drawImage(ethImg, px, py, CELL, CELL);
+ctx.restore();
+ctx.drawImage(ethImg, px, py, CELL, CELL);
+} else {
+ctx.drawImage(ethImg, px, py, CELL, CELL);
+}
+});
+}
+
+function updateScoreDisplay(newScore) {
+scoreValueEl.textContent = newScore;
+scoreValueEl.parentElement.classList.add("score-bounce");
+setTimeout(() => scoreValueEl.parentElement.classList.remove("score-bounce"), 400);
+spawnParticles();
+if (newScore > best) {
+best = newScore;
+localStorage.setItem("ethSnakeBest", best);
+highScoreValueEl.textContent = best;
+highScoreValueEl.parentElement.classList.add("score-bounce");
+setTimeout(() => highScoreValueEl.parentElement.classList.remove("score-bounce"), 400);
+}
+}
+
+// Particle effects for eating apple
+const particles = [];
+function spawnParticles() {
+for (let i=0; i<12; i++) {
+particles.push({
+x: apple.x * CELL + CELL/2,
+y: apple.y * CELL + CELL/2,
+vx: (Math.random() - 0.5) * 6,
+vy: (Math.random() - 0.5) * 6,
+life: 30 + Math.random() * 30,
+size: 3 + Math.random() * 4,
+opacity: 1,
+});
+}
+}
+function updateParticles() {
+for (let i = particles.length -1; i>=0; i--) {
+const p = particles[i];
+p.x += p.vx;
+p.y += p.vy;
+p.life--;
+p.opacity = p.life / 60;
+if (p.life <= 0) particles.splice(i, 1);
+}
+}
+function drawParticles() {
+particles.forEach(p => {
+ctx.beginPath();
+ctx.fillStyle = `rgba(255,79,79,${p.opacity})`;
+ctx.shadowColor = "rgba(255,79,79,0.8)";
+ctx.shadowBlur = 8;
+ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+ctx.fill();
+});
+}
+
+// Update game loop to draw particles
+function gameLoop(timestamp) {
+const delta = (timestamp - lastTime) / 1000;
+if (delta >= 1 / speed) {
+update();
+lastTime = timestamp;
+}
+draw();
+updateParticles();
+drawParticles();
+if (!gameOver) window.requestAnimationFrame(gameLoop);
+}
+
+// Controls
+window.addEventListener("keydown", (e) => {
+switch(e.key) {
+case "ArrowUp":
+if (dir.y !== 1) nextDir = {x:0, y:-1};
+break;
+case "ArrowDown":
+if (dir.y !== -1) nextDir = {x:0, y:1};
+break;
+case "ArrowLeft":
+if (dir.x !== 1) nextDir = {x:-1, y:0};
+break;
+case "ArrowRight":
+if (dir.x !== -1) nextDir = {x:1, y:0};
+break;
+case "r":
+case "R":
+reset();
+break;
+}
+});
+
+document.getElementById("restart").addEventListener("click", reset);
+
+ethImg.onload = () => {
+reset();
+};
+</script>
+
+</body>
+</html>
